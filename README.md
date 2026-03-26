@@ -28,7 +28,7 @@ Pathikatech TTS is a Text-to-Speech (TTS) application developed using Sarvam AI 
 ## 🤝 Contributors
 
 This project was built with the combined efforts of:
-- **Master Jayan**
+- **Jayan Gopale**
 - **Himanshu Chaudhari**
 - **Tanmay Bothara**
 
