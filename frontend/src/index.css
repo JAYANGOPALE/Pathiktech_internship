@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Wealthy Champagne & Deep Forest Palette */
+  --bg-main: #FDFCF5;
+  --bg-card: #FFFFFF;
+  --text-main: #1A1C16;
+  --text-muted: #4F554A;
+  --border: rgba(188, 108, 37, 0.15);
+  --primary: #BC6C25;
+  --primary-hover: #9A5B20;
+  --accent: #E9C46A;
+  --ring: rgba(188, 108, 37, 0.08);
+  --gold-glow: 0 4px 20px rgba(188, 108, 37, 0.1);
+}
+
+.dark {
+  /* Obsidian & Brushed Gold Palette */
+  --bg-main: #0A0A0B;
+  --bg-card: #141417;
+  --text-main: #F8F9FA;
+  --text-muted: #8E9196;
+  --border: rgba(233, 196, 106, 0.12);
+  --primary: #E9C46A;
+  --primary-hover: #F4D35E;
+  --accent: #D4AF37;
+  --ring: rgba(233, 196, 106, 0.15);
+  --gold-glow: 0 0 30px rgba(233, 196, 106, 0.05);
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: -0.01em;
+  transition: all 0.3s ease;
+  min-height: 100vh;
+}
+
+h1, h2, h3, .font-display {
+  font-family: 'Playfair Display', serif;
+}
+
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  box-shadow: var(--gold-glow);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle luxury shimmer for cards */
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.3;
+}
+
+.input-base {
+  width: 100%;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 1rem 1.25rem;
+  border-radius: 1rem;
+  transition: all 0.3s ease;
+}
+
+.input-base:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+  color: white;
+  font-weight: 600;
+  padding: 1rem 2rem;
+  border-radius: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  letter-spacing: 0.02em;
+}
+
+.dark .btn-primary {
+  color: #000;
+  font-weight: 700;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Luxury progress bars */
+.progress-container {
+  background-color: var(--border);
+  height: 4px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  background: linear-gradient(90deg, var(--accent), var(--primary));
+  height: 100%;
+}

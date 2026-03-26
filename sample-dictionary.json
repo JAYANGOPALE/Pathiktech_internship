@@ -1,0 +1,16 @@
+{
+  "pronunciations": {
+    "hi-IN": {
+      "API": "ay-pee-eye",
+      "GitHub": "git-hub",
+      "JavaScript": "jaa-vaa-script",
+      "React": "ree-act",
+      "Pathikatech": "paa-thi-kaa-tek"
+    },
+    "en-IN": {
+      "Namaste": "nuh-muh-stey",
+      "Chai": "ch-eye",
+      "Roti": "roh-tee"
+    }
+  }
+}

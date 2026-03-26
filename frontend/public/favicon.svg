@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Outer rotated square border -->
+  <rect x="4" y="4" width="24" height="24" rx="3"
+        stroke="#f0c84a" stroke-width="2" fill="none"
+        transform="rotate(45 16 16)"/>
+  <!-- Inner filled diamond -->
+  <rect x="10" y="10" width="12" height="12" rx="2"
+        fill="#f0c84a"
+        transform="rotate(45 16 16)"/>
+</svg>
