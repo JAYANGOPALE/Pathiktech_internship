@@ -1,35 +1,40 @@
 import React from 'react';
-import { Sun, Moon, Diamond } from 'lucide-react';
 
-export default function Navbar({ theme, toggleTheme }) {
+export default function Navbar() {
   return (
-    <header className="border-b border-[var(--border)] bg-[var(--bg-card)]/80 backdrop-blur-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
-        <div className="flex items-center gap-4 group cursor-pointer">
-          <div className="relative w-10 h-10 bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] rounded-xl flex items-center justify-center rotate-45 group-hover:rotate-90 transition-transform duration-500 shadow-lg">
-            <Diamond className="-rotate-45 group-hover:-rotate-90 transition-transform duration-500 text-white dark:text-black" size={20} />
+    <header className="sticky top-0 z-50">
+      <div style={{
+        background: 'rgba(253,248,240,0.92)',
+        backdropFilter: 'blur(16px)',
+        borderBottom: '1px solid rgba(217,119,6,0.15)',
+        boxShadow: '0 2px 16px rgba(155,35,53,0.06)',
+      }}>
+        {/* Tricolor stripe */}
+        <div style={{ height: '3px', background: 'linear-gradient(90deg, #FF9933 33.33%, #ffffff 33.33% 66.66%, #138808 66.66%)' }} />
+        
+        <div className="max-w-3xl mx-auto px-6 h-16 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            {/* Lotus icon */}
+            <div className="w-9 h-9 flex items-center justify-center rounded-full"
+              style={{ background: 'linear-gradient(135deg, #fdf8f0, #faf0dc)', border: '1.5px solid rgba(217,119,6,0.3)' }}>
+              <span style={{ fontSize: '18px' }}>🪷</span>
+            </div>
+            <div>
+              <div className="font-display font-semibold text-xl" style={{ color: '#7f1d2b', letterSpacing: '0.02em' }}>
+                Pathikatech
+              </div>
+              <div className="font-devanagari text-xs" style={{ color: '#d97706', lineHeight: 1.2 }}>वाणी · ध्वनि</div>
+            </div>
           </div>
-          <div className="flex flex-col">
-            <span className="text-2xl font-display font-bold tracking-tight">Pathikatech</span>
-            <span className="text-[9px] uppercase tracking-[0.3em] font-bold text-[var(--primary)] -mt-1 opacity-70">Neural Voice Studio</span>
+
+          {/* Badge */}
+          <div className="hidden sm:flex items-center gap-2 text-xs font-mono rounded-full px-3 py-1.5"
+            style={{ background: 'rgba(155,35,53,0.06)', border: '1px solid rgba(155,35,53,0.12)', color: '#9b2335' }}>
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#059669' }} />
+            bulbul:v3
           </div>
         </div>
-
-        <nav className="hidden lg:flex items-center gap-10">
-          {['Collections', 'Neural Engine', 'Enterprise', 'Curated Docs'].map((item) => (
-            <a key={item} href="#" className="text-[11px] uppercase tracking-[0.15em] font-bold text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors">
-              {item}
-            </a>
-          ))}
-        </nav>
-
-        <button
-          onClick={toggleTheme}
-          className="w-10 h-10 flex items-center justify-center rounded-xl border border-[var(--border)] hover:bg-[var(--bg-main)] transition-all duration-300 shadow-sm"
-          aria-label="Toggle Theme"
-        >
-          {theme === 'dark' ? <Sun size={18} className="text-[var(--accent)]" /> : <Moon size={18} className="text-[var(--primary)]" />}
-        </button>
       </div>
     </header>
   );

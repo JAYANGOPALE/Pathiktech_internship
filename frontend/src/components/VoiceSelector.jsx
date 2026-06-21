@@ -1,55 +1,83 @@
 import React from 'react';
-import { User, ShieldCheck, Heart } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 const VOICES = [
-  { id: 'shubh', label: 'Shubh', icon: <ShieldCheck size={18} />, tag: 'Authoritative', desc: 'Commanding & Resonant' },
-  { id: 'simran', label: 'Simran', icon: <Heart size={18} />, tag: 'Expressive', desc: 'Melodic & Empathetic' },
+  {
+    id: 'shubh',
+    label: 'Shubh',
+    devanagari: 'शुभ',
+    gender: 'Male',
+    desc: 'Deep & authoritative',
+    emoji: '🎙️',
+    color: '#3730a3',
+    bg: 'rgba(55,48,163,0.06)',
+    border: 'rgba(55,48,163,0.2)',
+  },
+  {
+    id: 'simran',
+    label: 'Simran',
+    devanagari: 'सिमरन',
+    gender: 'Female',
+    desc: 'Clear & expressive',
+    emoji: '🎤',
+    color: '#9b2335',
+    bg: 'rgba(155,35,53,0.06)',
+    border: 'rgba(155,35,53,0.2)',
+  },
+  {
+    id: 'ritu',
+    label: 'Ritu',
+    devanagari: 'ऋतु',
+    gender: 'Female',
+    desc: 'Warm & melodious',
+    emoji: '🪗',
+    color: '#059669',
+    bg: 'rgba(5,150,105,0.06)',
+    border: 'rgba(5,150,105,0.2)',
+  },
 ];
 
 export default function VoiceSelector({ selected, onChange, disabled }) {
   return (
-    <div className="space-y-4">
-      <label className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">
-        <User size={14} className="text-[var(--primary)]" /> 
-        Vocal Curations
+    <div>
+      <label className="label-indian">
+        <span style={{ fontSize: '16px' }}>🎭</span>
+        <span>Voice  <span className="font-devanagari font-normal" style={{ color: '#d97706', fontSize: '13px' }}>· वक्ता</span></span>
       </label>
-      
-      <div className="grid grid-cols-2 gap-6">
-        {VOICES.map((voice) => {
-          const isSelected = selected === voice.id;
+      <div className="grid grid-cols-3 gap-2">
+        {VOICES.map(v => {
+          const isSelected = selected === v.id;
           return (
             <button
-              key={voice.id}
-              onClick={() => !disabled && onChange(voice.id)}
+              key={v.id}
+              type="button"
+              onClick={() => !disabled && onChange(v.id)}
               disabled={disabled}
-              className={`group relative p-6 rounded-2xl border-2 text-left transition-all duration-500 overflow-hidden ${
-                isSelected 
-                  ? 'border-[var(--primary)] bg-[var(--bg-main)] shadow-xl' 
-                  : 'border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--primary)]/30'
-              }`}
+              className="relative text-left rounded-xl p-3 transition-all duration-200 focus:outline-none"
+              style={{
+                background: isSelected ? v.bg : 'rgba(255,255,255,0.5)',
+                border: `1.5px solid ${isSelected ? v.color : 'rgba(155,35,53,0.12)'}`,
+                boxShadow: isSelected ? `0 4px 16px ${v.bg}` : 'none',
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                opacity: disabled ? 0.5 : 1,
+                transform: isSelected ? 'translateY(-1px)' : 'none',
+              }}
             >
-              {isSelected && (
-                <motion.div 
-                  layoutId="vocal-active"
-                  className="absolute inset-0 bg-gradient-to-br from-[var(--accent)]/5 to-transparent"
-                />
-              )}
-              
-              <div className="relative z-10 flex flex-col h-full justify-between">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`p-2 rounded-lg ${isSelected ? 'bg-[var(--primary)] text-white dark:text-black' : 'bg-[var(--bg-main)] text-[var(--text-muted)]'}`}>
-                    {voice.icon}
-                  </div>
-                  <span className={`text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded border border-[var(--border)] ${isSelected ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'}`}>
-                    {voice.tag}
-                  </span>
-                </div>
-                
-                <div>
-                  <div className="font-display font-bold text-xl mb-1">{voice.label}</div>
-                  <div className="text-[11px] font-medium tracking-wide text-[var(--text-muted)]/70 uppercase">{voice.desc}</div>
-                </div>
+              {/* Selection dot */}
+              <div className="absolute top-2 right-2 w-3 h-3 rounded-full transition-all"
+                style={{
+                  background: isSelected ? v.color : 'transparent',
+                  border: `2px solid ${isSelected ? v.color : 'rgba(155,35,53,0.2)'}`,
+                }} />
+
+              <div className="text-xl mb-1">{v.emoji}</div>
+              <div className="font-display font-semibold text-sm" style={{ color: isSelected ? v.color : '#4a2020' }}>
+                {v.label}
+              </div>
+              <div className="font-devanagari text-xs" style={{ color: v.color, opacity: 0.7 }}>
+                {v.devanagari}
+              </div>
+              <div className="text-xs mt-1" style={{ color: '#a07860' }}>
+                {v.gender} · {v.desc}
               </div>
             </button>
           );

@@ -4,38 +4,26 @@ const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3000/tts-stream';
 
 /**
  * Custom hook for TTS WebSocket streaming.
- * Manages connection lifecycle, chunk accumulation, and audio blob creation.
+ * Accumulates binary audio chunks and assembles them into a single MP3 Blob on completion.
  */
 export function useTTSStream() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
   const [error, setError] = useState(null);
-  const [progress, setProgress] = useState(0); // rough chunk count for UI
+  const [progress, setProgress] = useState(0);
 
   const wsRef = useRef(null);
   const chunksRef = useRef([]);
-  const prevAudioUrlRef = useRef(null);
-  // Track streaming state in a ref to avoid stale closures in WS callbacks
+  const prevUrlRef = useRef(null);
+  // Use a ref to track streaming state in WS callbacks (avoids stale closure)
   const isStreamingRef = useRef(false);
 
-  /**
-   * Start streaming TTS audio.
-   * @param {Object} params
-   * @param {string} params.text        - Text to convert
-   * @param {string} params.speaker     - 'shubh' or 'simran'
-   * @param {string|null} params.dictId - Optional dictionary ID
-   * @param {string} params.languageCode - Language code (default: 'hi-IN')
-   */
-  const startStream = useCallback(({ text, speaker, dictId = null, languageCode = 'hi-IN' }) => {
-    // Clean up any existing connection
-    if (wsRef.current) {
-      wsRef.current.close();
-    }
+  const startStream = useCallback(({ text, speaker, dictId = null, languageCode = 'hi-IN', pace = 1.0 }) => {
+    // Close existing connection
+    if (wsRef.current) wsRef.current.close();
 
-    // Revoke previous audio URL to free memory
-    if (prevAudioUrlRef.current) {
-      URL.revokeObjectURL(prevAudioUrlRef.current);
-    }
+    // Free old audio URL
+    if (prevUrlRef.current) URL.revokeObjectURL(prevUrlRef.current);
 
     isStreamingRef.current = true;
     setIsStreaming(true);
@@ -46,76 +34,63 @@ export function useTTSStream() {
 
     const ws = new WebSocket(WS_URL);
     wsRef.current = ws;
-
-    // Set binary type to ArrayBuffer for audio chunks
     ws.binaryType = 'arraybuffer';
 
     ws.onopen = () => {
-      // Send the TTS request parameters as JSON
-      ws.send(JSON.stringify({ text, speaker, dictId, languageCode }));
+      ws.send(JSON.stringify({ text, speaker, dictId, languageCode, pace }));
     };
 
     ws.onmessage = (event) => {
       if (event.data instanceof ArrayBuffer) {
-        // Binary data = audio chunk
+        // Binary chunk — accumulate
         chunksRef.current.push(new Uint8Array(event.data));
-        setProgress((p) => p + 1);
+        setProgress(p => p + 1);
       } else {
-        // JSON control message
         try {
-          const message = JSON.parse(event.data);
-
-          if (message.done) {
-            // All chunks received — assemble MP3 Blob
-            const totalLength = chunksRef.current.reduce((acc, c) => acc + c.length, 0);
-            const combined = new Uint8Array(totalLength);
+          const msg = JSON.parse(event.data);
+          if (msg.done) {
+            // Assemble all chunks into one MP3 Blob
+            const total = chunksRef.current.reduce((a, c) => a + c.length, 0);
+            const buf = new Uint8Array(total);
             let offset = 0;
             for (const chunk of chunksRef.current) {
-              combined.set(chunk, offset);
+              buf.set(chunk, offset);
               offset += chunk.length;
             }
-
-            const blob = new Blob([combined], { type: 'audio/mpeg' });
+            const blob = new Blob([buf], { type: 'audio/mpeg' });
             const url = URL.createObjectURL(blob);
-            prevAudioUrlRef.current = url;
+            prevUrlRef.current = url;
             setAudioUrl(url);
             isStreamingRef.current = false;
             setIsStreaming(false);
-          } else if (message.error) {
-            setError(message.error);
+          } else if (msg.error) {
+            setError(msg.error);
             isStreamingRef.current = false;
             setIsStreaming(false);
           }
         } catch {
-          // Ignore non-JSON messages
+          // ignore non-JSON frames
         }
       }
     };
 
     ws.onerror = () => {
-      setError('WebSocket connection failed. Is the backend running?');
+      setError('WebSocket connection failed. Is the backend running on port 3000?');
       isStreamingRef.current = false;
       setIsStreaming(false);
     };
 
     ws.onclose = (event) => {
-      // Use ref to check real streaming state — avoids stale closure on captured state
       if (!event.wasClean && isStreamingRef.current) {
-        setError('Connection closed unexpectedly');
+        setError('Connection closed unexpectedly.');
         isStreamingRef.current = false;
         setIsStreaming(false);
       }
     };
   }, []);
 
-  /**
-   * Cancel an in-progress stream.
-   */
   const cancelStream = useCallback(() => {
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
+    if (wsRef.current) { wsRef.current.close(); wsRef.current = null; }
     isStreamingRef.current = false;
     setIsStreaming(false);
     chunksRef.current = [];

@@ -3,78 +3,65 @@ const FormData = require('form-data');
 
 const SARVAM_BASE_URL = 'https://api.sarvam.ai';
 
-/**
- * Returns the default Axios headers for Sarvam API authentication.
- */
 function getSarvamHeaders(extra = {}) {
   const apiKey = process.env.SARVAM_API_KEY;
-  if (!apiKey) {
-    throw new Error('SARVAM_API_KEY is not set in environment variables');
-  }
-  return {
-    'api-subscription-key': apiKey,
-    ...extra,
-  };
+  if (!apiKey) throw new Error('SARVAM_API_KEY is not set in environment variables');
+  return { 'api-subscription-key': apiKey, ...extra };
 }
 
 /**
- * Streams TTS audio from Sarvam AI's bulbul:v3 model.
- * Calls onChunk for each binary chunk received, then resolves when done.
- *
- * @param {Object} options
- * @param {string} options.text         - Text to convert to speech
- * @param {string} options.speaker      - 'shubh' or 'simran'
- * @param {string|null} options.dictId  - Optional pronunciation dictionary ID
- * @param {string} options.languageCode - Target language code (default: 'hi-IN')
- * @param {Function} options.onChunk    - Callback for each binary audio chunk (Buffer)
+ * Streams TTS audio from Sarvam AI bulbul:v3.
+ * Endpoint: POST /text-to-speech/stream
  */
-async function streamTTS({ text, speaker, dictId, languageCode = 'hi-IN', onChunk }) {
+async function streamTTS({ text, speaker, dictId, languageCode = 'hi-IN', pace = 1.0, onChunk }) {
   const requestBody = {
     text,
     target_language_code: languageCode,
-    speaker,
+    speaker: speaker.toLowerCase(),
     model: 'bulbul:v3',
     output_audio_codec: 'mp3',
+    pace: parseFloat(pace) || 1.0,
   };
 
-  // Include dictionary ID if provided
-  if (dictId) {
-    requestBody.dict_id = dictId;
+  if (dictId) requestBody.dict_id = dictId;
+
+  let response;
+  try {
+    response = await axios.post(
+      `${SARVAM_BASE_URL}/text-to-speech/stream`,
+      requestBody,
+      {
+        headers: getSarvamHeaders({ 'Content-Type': 'application/json' }),
+        responseType: 'stream',
+        timeout: 60000,
+      }
+    );
+  } catch (err) {
+    if (err.response) {
+      const status = err.response.status;
+      let message = `Sarvam API error (${status})`;
+      try {
+        const chunks = [];
+        for await (const chunk of err.response.data) chunks.push(chunk);
+        const body = JSON.parse(Buffer.concat(chunks).toString());
+        message = body?.error || body?.message || body?.detail || message;
+      } catch {}
+      throw new Error(message);
+    }
+    throw err;
   }
 
-  const response = await axios.post(
-    `${SARVAM_BASE_URL}/text-to-speech/stream`,
-    requestBody,
-    {
-      headers: getSarvamHeaders({ 'Content-Type': 'application/json' }),
-      responseType: 'stream', // Important: get a readable stream
-      timeout: 30000, // 30-second timeout
-    }
-  );
-
-  // Stream the response data chunk by chunk
   return new Promise((resolve, reject) => {
-    response.data.on('data', (chunk) => {
-      onChunk(chunk);
-    });
-
-    response.data.on('end', () => {
-      resolve();
-    });
-
-    response.data.on('error', (err) => {
-      reject(new Error(`Sarvam stream error: ${err.message}`));
-    });
+    response.data.on('data', (chunk) => onChunk(chunk));
+    response.data.on('end', resolve);
+    response.data.on('error', (err) => reject(new Error(`Stream error: ${err.message}`)));
   });
 }
 
 /**
- * Uploads a pronunciation dictionary JSON file to Sarvam AI.
- * Returns the dictionary_id string from Sarvam's response.
- *
- * @param {Buffer} fileBuffer   - Raw file contents
- * @param {string} filename     - Original file name
- * @returns {Promise<string>}   - The dictionary_id
+ * Uploads a pronunciation dictionary to Sarvam AI.
+ * CORRECT endpoint: POST /pronunciation-dictionary
+ * NOTE: /pronunciation-dictionary/create returns 404 — do NOT use that path.
  */
 async function uploadPronunciationDictionary(fileBuffer, filename) {
   const formData = new FormData();
@@ -83,24 +70,30 @@ async function uploadPronunciationDictionary(fileBuffer, filename) {
     contentType: 'application/json',
   });
 
-  const response = await axios.post(
-    `${SARVAM_BASE_URL}/pronunciation-dictionary/create`,
-    formData,
-    {
-      headers: {
-        ...getSarvamHeaders(),
-        ...formData.getHeaders(),
-      },
-      timeout: 15000,
+  let response;
+  try {
+    response = await axios.post(
+      `${SARVAM_BASE_URL}/pronunciation-dictionary`,
+      formData,
+      {
+        headers: { ...getSarvamHeaders(), ...formData.getHeaders() },
+        timeout: 20000,
+      }
+    );
+  } catch (err) {
+    if (err.response) {
+      const data = err.response.data;
+      const message = data?.error || data?.message || data?.detail || `Sarvam API error (${err.response.status})`;
+      throw new Error(message);
     }
-  );
-
-  const { dictionary_id } = response.data;
-  if (!dictionary_id) {
-    throw new Error('Sarvam API did not return a dictionary_id');
+    throw err;
   }
 
-  return dictionary_id;
+  const dictionaryId = response.data?.dictionary_id || response.data?.id;
+  if (!dictionaryId) {
+    throw new Error('Sarvam API did not return a dictionary_id. Response: ' + JSON.stringify(response.data));
+  }
+  return dictionaryId;
 }
 
 module.exports = { streamTTS, uploadPronunciationDictionary };
